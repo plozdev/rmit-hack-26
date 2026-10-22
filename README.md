@@ -1,8 +1,8 @@
 # RMIT Hack 26 — Next.js & TideCloak Security Stack
 
-Ứng dụng Next.js tích hợp nền tảng xác thực phi tập trung và quản trị bảo mật **TideCloak** (công nghệ Never-Whole-Key, DPoP, IGA và E2EE của Tide Foundation).
+Ứng dụng Next.js tích hợp xác thực và quản trị bảo mật **TideCloak**. Demo hiện có đăng nhập, route được bảo vệ, API xác minh Bearer token và ghi chú mã hóa cho từng người dùng. Repo có route hỗ trợ DPoP, nhưng luồng DPoP chưa được bật hay xác minh ở API.
 
-Dự án đã tích hợp sẵn **Raziel MCP Server** (`@tideorg/mcp`) để AI coding assistant (Google Antigravity, Cursor, Claude Code, Windsurf, Zed, v.v.) tự động hỗ trợ audit bảo mật, phân tích rủi ro và tích hợp auth.
+Dự án có cấu hình kết nối tới **Tide Raziel MCP Server** tại `https://mcp.tide.org/mcp` cho công cụ AI hỗ trợ phát triển.
 
 ---
 
@@ -19,7 +19,7 @@ Dự án đã tích hợp sẵn **Raziel MCP Server** (`@tideorg/mcp`) để AI 
 
 ## 1. Yêu cầu hệ thống
 - **Hệ điều hành**: WSL2 (Ubuntu 22.04 / 24.04 / 26.04) trên Windows, hoặc Linux / macOS.
-- **Node.js**: Phiên bản LTS (`v18.x`, `v20.x` hoặc `v22.x`) khuyên dùng cài qua **NVM**.
+- **Node.js**: Từ `20.9.0` trở lên theo Next.js trong lockfile; khuyên dùng bản LTS qua **NVM**.
 - **Docker**: Docker Engine + CLI đã được cài đặt và đang chạy.
 - **Công cụ bổ trợ**: `curl`, `jq`, `sed`, `git`.
 
@@ -77,7 +77,7 @@ docker run --rm hello-world
 
 TideCloak chạy dưới dạng container Docker độc lập với database lưu trữ cục bộ.
 
-Chạy các lệnh sau từ thư mục gốc của repo (ngang hàng với `my-app`):
+Chạy các lệnh sau từ thư mục gốc của repo (nơi có `package.json`):
 
 ```bash
 # 1. Tạo thư mục lưu database H2 và phân quyền (UID 1000 cho container keycloak)
@@ -108,9 +108,6 @@ sudo docker run -d --name tidecloak \
 Sau khi TideCloak đã sẵn sàng ở cổng `8080`:
 
 ```bash
-# Di chuyển vào thư mục ứng dụng
-cd my-app
-
 # 1. Cài đặt dependencies
 npm ci
 
@@ -122,7 +119,7 @@ npm run init
 1. Kết nối vào TideCloak tại `http://localhost:8080`.
 2. Tạo Realm mới (mặc định: `nextjs-test`) và Client (mặc định: `myclient`).
 3. Kích hoạt tính năng **Tide IGA (Identity Governance & Administration)** và cấu hình chính sách.
-4. Tự động xuất file cấu hình adapter **`my-app/tidecloak.json`**. File này chứa các public key (`jwk`), endpoint của mạng ORK (`homeOrkUrl`) và chữ ký nguồn gốc `client-origin-auth` cho `http://localhost:3000`.
+4. Tự động xuất file cấu hình adapter **`tidecloak.json`** tại root repo. File này chứa các public key (`jwk`), endpoint của mạng ORK (`homeOrkUrl`) và chữ ký nguồn gốc `client-origin-auth` cho `http://localhost:3000`.
 
 ### 3. Khởi chạy ứng dụng ở môi trường Development
 ```bash
@@ -132,37 +129,34 @@ npm run dev
 Mở trình duyệt tại [http://localhost:3000](http://localhost:3000) để trải nghiệm:
 - **Trang chủ & Đăng nhập**: Xác thực qua TideCloak với cơ chế PRISM (không lưu mật khẩu dạng hash).
 - **Protected Routes**: Kiểm tra session và vai trò người dùng (`/protected`).
-- **DPoP Authentication**: Trình diễn gắn token với trình duyệt thông qua khóa bất đối xứng (`/tide_dpop`).
+- **Route hỗ trợ DPoP (chưa bật)**: `/tide_dpop/.../tide_dpop_auth.html` cung cấp HTML cho SDK nếu bật DPoP sau này. Demo hiện tại chưa truyền `useDPoP` cho provider; nút Verify Token gọi `/api/protected` bằng Bearer token. API này chưa xác minh DPoP proof. DPoP không phải yêu cầu bắt buộc của challenge.
 
 ---
 
 ## 5. Hướng dẫn sử dụng MCP (Tide Raziel)
 
-Dự án đã được trang bị **Raziel: Tide's MCP Server** (`@tideorg/mcp`). MCP cho phép các AI Assistant (Antigravity IDE, Cursor, Claude Code, Windsurf, Zed, v.v.) có toàn bộ tài liệu kỹ thuật, doctrine, security invariant và các playbook chuẩn của TideCloak.
+Dự án có cấu hình MCP từ xa cho Tide Raziel. Khả năng sử dụng phụ thuộc vào công cụ AI và kết nối MCP của người dùng.
 
 ### 5.1. File cấu hình MCP
-File `.mcp.json` đã có sẵn tại root của repo:
+`.mcp.json` ở root là liên kết tới `.agents/plugins/tide/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-    "tide-pack": {
-      "command": "npx",
-      "args": ["-y", "@tideorg/mcp"]
+    "tide": {
+      "url": "https://mcp.tide.org/mcp"
     }
   }
 }
 ```
 
-- **Antigravity IDE**: Đã cấu hình thêm trong `~/.gemini/config/mcp_config.json`.
-- **Claude Code**: Chạy lệnh `claude mcp add tide-pack -- npx -y @tideorg/mcp`.
-- **Cursor / Windsurf**: Đọc tự động từ `.mcp.json` hoặc thêm trong Settings > MCP Servers.
+`opencode.json` cũng trỏ tới URL trên. Với công cụ khác, thêm Tide như một remote MCP server bằng URL đó theo hướng dẫn của công cụ.
 
 ### 5.2. Các câu lệnh và Prompt hữu ích khi làm việc cùng AI
 
 | Mục tiêu | Câu hỏi / Prompt mẫu cho AI | Hành động của AI via MCP |
 | :--- | :--- | :--- |
 | **Quét rủi ro hệ thống (Blast Radius)** | *"Quét dự án của tôi và phân tích Blast Radius để xem nếu rò rỉ token/khóa thì điều gì sẽ bị lộ?"* | Gọi `tide_blast_radius` & `tide_security_analysis` để rà soát toàn bộ route, session và database. |
-| **Bảo vệ API Route với DPoP** | *"Hướng dẫn và viết code bảo vệ Next.js API route `/api/wallet` bằng JWT + DPoP verification"* | Tra cứu playbook `verify-jwt-server-side`, kiểm tra claim `cnf.jkt` và tạo middleware. |
+| **Tìm hiểu DPoP** | *"Hướng dẫn bổ sung DPoP proof verification cho API Next.js"* | Hỗ trợ thiết kế bước xác minh còn thiếu; repo hiện chỉ xác minh Bearer token. |
 | **Phân quyền vai trò (RBAC / IGA)** | *"Thiết lập role-based access cho nhóm 'admin' và 'user' qua TideCloak IGA"* | Cung cấp các bước gán role và phê duyệt change request thông qua IGA API. |
 | **Mã hóa E2EE (Hermetic E2EE)** | *"Hướng dẫn cách mã hóa dữ liệu end-to-end giữa 2 người dùng bằng Forseti Relationship Attestation"* | Gọi canon `relationship-attestation` và sinh mã hóa E2EE sử dụng khóa phân tán ORK. |
 | **Khắc phục sự cố Auth** | *"Gặp lỗi redirect loop sau khi đăng nhập qua TideCloak, hãy chuẩn đoán nguyên nhân"* | Gọi `tide_doctor` và kiểm tra redirect-handler canon để tìm sai sót cấu hình URL. |
@@ -172,19 +166,18 @@ File `.mcp.json` đã có sẵn tại root của repo:
 ## 6. Cấu trúc thư mục
 
 ```text
-├── .mcp.json               # Cấu hình MCP Server (tide-pack)
-├── data/                   # Thư mục lưu database H2 của Docker TideCloak (gitignored)
-└── my-app/
-    ├── app/                # Next.js App Router (auth, home, protected, tide_dpop, api)
-    ├── init/
-    │   ├── tcinit.sh       # Script tự động khởi tạo realm, client, IGA
-    │   ├── realm.json      # Template cấu hình realm mẫu
-    │   └── .env.example    # Cấu hình mẫu các URL & tài khoản admin
-    ├── scripts/
-    │   └── ensure-config.mjs # Script kiểm tra tidecloak.json trước khi build/dev
-    ├── tidecloak.json      # File adapter do tcinit.sh xuất ra (gitignored)
-    ├── package.json        # Dependencies Next.js 16, React 19, @tidecloak/nextjs
-    └── README.md           # Hướng dẫn dự án này
+├── .mcp.json               # Liên kết tới .agents/plugins/tide/mcp_config.json
+├── opencode.json           # Cấu hình remote MCP cho OpenCode
+├── data/                   # Database H2 cục bộ khi chạy Docker (gitignored)
+├── app/                    # Next.js App Router (auth, home, protected, tide_dpop, api)
+├── init/
+│   ├── tcinit.sh           # Script khởi tạo realm, client, IGA
+│   └── realm.json          # Template cấu hình realm
+├── scripts/
+│   └── ensure-config.mjs   # Tạo config placeholder trước khi build/dev nếu thiếu
+├── tidecloak.json          # Adapter do tcinit.sh xuất ra (gitignored)
+├── package.json            # Dependencies Next.js 16, React 19, @tidecloak/nextjs
+└── README.md
 ```
 
 ---
@@ -202,7 +195,7 @@ File `.mcp.json` đã có sẵn tại root của repo:
 - **Nguyên nhân**: Bạn chạy `npm run dev` trước khi chạy `npm run init`.
 - **Khắc phục**:
   1. Đảm bảo container `tidecloak` đang chạy ở port 8080 (`docker ps`).
-  2. Chạy `npm run init` bên trong thư mục `my-app`.
+  2. Chạy `npm run init` tại root repo.
   3. Khởi động lại app bằng `npm run dev`.
 
 ### 3. Container `tidecloak` báo lỗi cổng 8080 đã được sử dụng
