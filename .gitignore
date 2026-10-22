@@ -6,3 +6,4 @@ tsconfig.tsbuildinfo
 !.env.example
 tidecloak.json
 /data/
+/app-data/

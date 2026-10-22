@@ -1,74 +1,17 @@
 'use client'
 
-import { useCallback, useState, type CSSProperties } from 'react'
-import { useTideCloak } from '@tidecloak/nextjs'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-
-const containerStyle: CSSProperties = {
-  minHeight: '100vh',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: '#f5f5f5',
-  margin: 0,
-}
-
-const cardStyle: CSSProperties = {
-  background: '#fff',
-  padding: '2rem',
-  borderRadius: '8px',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  textAlign: 'center',
-  maxWidth: '360px',
-  width: '100%',
-}
-
-const buttonStyle: CSSProperties = {
-  marginTop: '1rem',
-  padding: '0.75rem 1.5rem',
-  fontSize: '1rem',
-  borderRadius: '4px',
-  border: 'none',
-  background: '#0070f3',
-  color: '#fff',
-  cursor: 'pointer',
-}
+import { useTideCloak } from '@tidecloak/nextjs'
 
 export default function LoginPage() {
   const { login, authenticated, isInitializing, initError } = useTideCloak()
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const router = useRouter()
-
+  useEffect(() => { if (authenticated) router.push('/home') }, [authenticated, router])
   const onLogin = useCallback(async () => {
-    if (isInitializing || initError) return
-    setLoginError(null)
-    try {
-      await login()
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Login failed')
-    }
-  }, [login, isInitializing, initError])
-
-  useEffect(() => {
-    if (authenticated) {
-      router.push('/home')
-    }
-  }, [authenticated, router])
-
-  return (
-    <div style={containerStyle}>
-        <div style={cardStyle}>
-          <h1 style={{ margin: 0, fontSize: '1.75rem' }}>Welcome!</h1>
-          <p style={{ color: '#555', marginTop: '0.5rem' }}>
-            Please log in to continue.
-          </p>
-          {initError && <p role="alert">Authentication setup failed: {initError.message}</p>}
-          {loginError && <p role="alert">{loginError}</p>}
-          <button onClick={onLogin} disabled={isInitializing || Boolean(initError)} style={buttonStyle}>
-            {isInitializing ? 'Loading...' : 'Log In'}
-          </button>
-        </div>
-    </div>
-  )
+    setError('')
+    try { await login() } catch (cause) { setError(cause instanceof Error ? cause.message : 'Đăng nhập thất bại') }
+  }, [login])
+  return <main className="login-shell"><div className="login-panel"><div className="brand"><span className="brand-mark">◈</span>PROOF/GATE</div><div className="eyebrow">RMIT HACKATHON 2026 · TIDE UNLOCKED</div><h1>Chứng cứ cần<br /><em>đúng người, đúng quyền.</em></h1><p>Một bản demo về quản trị truy cập chứng cứ có nhiều bên phê duyệt. Dữ liệu hoàn toàn giả lập.</p><button className="primary" onClick={onLogin} disabled={isInitializing || Boolean(initError)}>{isInitializing ? 'Đang kết nối…' : 'Đăng nhập với TideCloak →'}</button>{(error || initError) && <p className="warning">{error || initError?.message}</p>}</div><div className="login-aside"><span>01 — ĐĂNG NHẬP</span><span>02 — NIÊM PHONG</span><span>03 — QEA 2/3</span><span>04 — GIẢI MÃ</span></div></main>
 }

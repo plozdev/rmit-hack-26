@@ -4,11 +4,12 @@ import {
   TideCloakProvider
 } from '@tidecloak/nextjs'
 import tcConfig from '../tidecloak.json'
+import './globals.css'
 
 
 export const metadata: Metadata = {
-  title: 'My Tidecloak App',
-  description: 'A Next.js starter with Tidecloak',
+  title: 'Proof/Gate — Evidence Access Prototype',
+  description: 'TideCloak QEA evidence access prototype for RMIT Hackathon 2026',
 }
 
 interface RootLayoutProps {
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   )
 
   return (
-    <html lang="en">
+    <html lang="vi">
       <body>
         {isConfigured ? (
           <TideCloakProvider config={{ ...tcConfig, useDPoP: { mode: 'strict' } }}>{children}</TideCloakProvider>
