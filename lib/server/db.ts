@@ -47,9 +47,9 @@ function database(): DatabaseSync {
   `)
   db.prepare(`INSERT OR IGNORE INTO cases (id, title, summary, source) VALUES (?, ?, ?, ?)`).run(
     'case-001',
-    'Hồ sơ camera nút giao số 7',
-    'Dữ liệu mô phỏng phục vụ thử nghiệm quy trình tiếp cận chứng cứ có kiểm soát.',
-    'Đơn vị lưu giữ chứng cứ giả lập',
+    'Intersection 7 Surveillance Footage',
+    'Simulated footage for testing multi-party controlled judicial evidence workflows.',
+    'Simulated Evidence Storage Unit',
   )
   connection = db
   return db
