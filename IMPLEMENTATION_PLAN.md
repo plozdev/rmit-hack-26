@@ -23,7 +23,7 @@
 ## Sequence
 
 1. Confirm Docker TideCloak is running, existing `nextjs-test` realm and `myclient` work, `tidecloak.json` points to localhost. Do not rerun `npm run init` against a working realm.
-2. Provision custodian and two additional Tide-enrolled realm admins. Create `_tide_case001.selfencrypt` and `_tide_case001.selfdecrypt`. Give only encrypt to custodian initially; do not add decrypt to `default-roles-nextjs-test`.
+2. Make the case roles live in Tide Console. If QEA Approvals already lists create-role and create-user requests for `_tide_case001.selfencrypt`, `_tide_case001.selfdecrypt`, `reviewer-b`, `reviewer-c`, and `custodian-demo`, Authorize those. Do not create duplicates. Then enroll the three Tide accounts and grant only encrypt to the custodian. Do not add decrypt to `default-roles-nextjs-test`. See [TIDECLOAK_SETUP.md](TIDECLOAK_SETUP.md).
 3. Start app on port 3000; custodian login; seal evidence from browser. Inspect DB ciphertext.
 4. Submit app request; attempt open and capture 403.
 5. Admin A grants decrypt role to custodian, then approves pending QEA CR. Capture 1/2 still pending.
@@ -48,6 +48,7 @@ Use the Console or Management API for live changes. A tool name shown in a slide
 | Gate | Failure response |
 |---|---|
 | Fewer than 3 realm admins | Demo quorum is not 2/3; enroll third admin before recording |
+| Case role returns 404 or is still pending | Authorize the existing QEA request in Tide Console as the enrolled admin. Do not create a second role or user with the same name |
 | Decrypt role in default roles | Remove it through QEA; new session must lack role before demo |
 | `doEncrypt` fails | Check Tide license, QEA, Tide IDP login, exact tag role and SDK input string |
 | API returns 401 to `secureFetch` | Check current token, DPoP proof URL/method, callback and port 3000 |

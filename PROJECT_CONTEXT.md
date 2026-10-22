@@ -19,7 +19,7 @@ The application demonstrates a narrow property: an IAM role grant does not take 
 | Admin B | Independently approves same pending role change | `tide-realm-admin` |
 | Admin C | Makes N=3 so Tide's current threshold is 2; can be reserve approver | `tide-realm-admin` |
 
-The first admin alone has threshold 1. Three enrolled realm admins are required for the 2/3 demonstration. The `master` realm is outside QEA governance; do not claim every possible operator action is impossible. The app does not implement legal warrant issuance or real judicial roles.
+The first admin alone has threshold 1. Two admins still have threshold 1. Three enrolled realm admins are required before one approval stays pending and the second commits. The case roles and the custodian, reviewer B, and reviewer C accounts live in the Tide realm, not in git. They take effect only after the enrolled admin authorizes the QEA requests, as described in [TIDECLOAK_SETUP.md](TIDECLOAK_SETUP.md). Until that authorization, the starter roles (`offline_access`, `appUser`, `_tide_message.*`) are the ones that exist, and they do not satisfy the evidence API. The `master` realm is outside QEA governance; a master-admin REST call does not replace Authorize in Tide Console. The app does not implement legal warrant issuance or real judicial roles.
 
 ## Trust boundaries
 

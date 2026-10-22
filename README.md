@@ -99,7 +99,16 @@ docker run --name mytidecloak -d -v $(pwd):/opt/keycloak/data/h2 -p 8080:8080 -e
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-> Ensure the public OIDC client (`myclient`) in Tide Console allows `http://localhost:3000/*` as Valid Redirect URIs and `http://localhost:3000` as Web Origins. Follow [TIDECLOAK_SETUP.md](TIDECLOAK_SETUP.md) for detailed admin and custodian user creation.
+> Ensure the public OIDC client (`myclient`) in Tide Console allows `http://localhost:3000/*` as Valid Redirect URIs and `http://localhost:3000` as Web Origins.
+
+### Step 4: Make the case roles live
+
+Login works before this step. The case roles do not. `_tide_case001.selfencrypt` and `_tide_case001.selfdecrypt` stay inactive until an enrolled admin authorizes them in Tide Console. Follow [TIDECLOAK_SETUP.md](TIDECLOAK_SETUP.md):
+
+1. Sign in to Tide Console as the enrolled `nextjs-test` admin (`admin` on the current realm), not the master bootstrap account.
+2. In **QEA Approvals**, **Authorize** the pending create-role and create-user requests if they are already listed. Do not create those users or roles a second time.
+3. Enroll `reviewer-b` and `custodian-demo` in separate browser profiles. Grant `tide-realm-admin` to B and authorize it.
+4. Grant only `_tide_case001.selfencrypt` to the custodian and authorize it. Then enroll `reviewer-c`, grant `tide-realm-admin`, and authorize that grant. Leave `_tide_case001.selfdecrypt` unassigned until the walkthrough below. With three enrolled admins, one approval of that decrypt grant stays pending and the second approval commits it.
 
 ---
 
