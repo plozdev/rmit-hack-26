@@ -15,7 +15,7 @@ npm run dev
 `npm run init` provisions a local TideCloak realm and writes `tidecloak.json`.
 It expects TideCloak at `http://localhost:8080` and the app at
 `http://localhost:3000` by default. Override those URLs and other setup
-values through environment variables or `init/.env.example` as needed.
+values through environment variables as needed.
 
 The generated `tidecloak.json` is local and ignored by Git. If you start the
 app before provisioning the realm, a placeholder config is created and the
