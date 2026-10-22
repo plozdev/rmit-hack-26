@@ -12,7 +12,7 @@ const tcConfig = rawConfig as TidecloakConfig
 
 
 export default function HomePage() {
-  const { logout, getValueFromIdToken, hasRealmRole, token, doEncrypt, doDecrypt } = useTideCloak()
+  const { logout, getValueFromIdToken, hasRealmRole, token, secureFetch, doEncrypt, doDecrypt } = useTideCloak()
 
   const [username, setUsername] = useState("")
   const [hasDefaultRole, setHasDefaultRole] = useState(false)
@@ -58,7 +58,7 @@ export default function HomePage() {
     setVerifying(true)
     setVerifyResult(null)
     try {
-      const res = await fetch('/api/protected', {
+      const res = await secureFetch(new URL('/api/protected', window.location.origin).href, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -75,7 +75,7 @@ export default function HomePage() {
     } finally {
       setVerifying(false)
     }
-  }, [token])
+  }, [token, secureFetch])
 
   // Submit = encrypt the current value, persist the ciphertext, then decrypt it
   // straight back so the field keeps showing plaintext. We store only the

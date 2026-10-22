@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyTideCloakToken } from '@tidecloak/nextjs/server'
 import tcConfig from '../../../tidecloak.json'
+import { verifyDpopProof } from '../../../lib/verify-dpop'
 
 const ALLOWED_ROLE = 'offline_access'
 
-// Accepts plain Bearer tokens only. If you turn on useDPoP, call this with
-// secureFetch and extend it to accept the DPoP scheme and validate the proof server-side.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('DPoP ')) {
     return NextResponse.json(
-      { error: 'Unauthorized: Missing or invalid token' },
+      { error: 'Unauthorized: DPoP token required' },
       { status: 401 }
     )
   }
 
-  const token = authHeader.split(' ')[1]
+  const token = authHeader.slice('DPoP '.length)
 
   try {
     const user = await verifyTideCloakToken(tcConfig, token, [ALLOWED_ROLE]) as Record<string, any>
@@ -24,6 +23,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(
         { error: 'Forbidden: Invalid token or insufficient role' },
         { status: 403 }
+      )
+    }
+    if (!await verifyDpopProof(request.headers.get('dpop'), token, user.cnf?.jkt, request.method, request.url)) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Invalid DPoP proof' },
+        { status: 401 }
       )
     }
     return NextResponse.json(

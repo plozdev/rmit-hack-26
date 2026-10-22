@@ -1,6 +1,6 @@
 # RMIT Hack 26 — Next.js & TideCloak Security Stack
 
-Ứng dụng Next.js tích hợp xác thực và quản trị bảo mật **TideCloak**. Demo hiện có đăng nhập, route được bảo vệ, API xác minh Bearer token và ghi chú mã hóa cho từng người dùng. Repo có route hỗ trợ DPoP, nhưng luồng DPoP chưa được bật hay xác minh ở API.
+Ứng dụng Next.js tích hợp xác thực và quản trị bảo mật **TideCloak**. Demo hiện có đăng nhập, route được bảo vệ, API xác minh DPoP proof và ghi chú mã hóa cho từng người dùng.
 
 Dự án có cấu hình kết nối tới **Tide Raziel MCP Server** tại `https://mcp.tide.org/mcp` cho công cụ AI hỗ trợ phát triển.
 
@@ -129,7 +129,7 @@ npm run dev
 Mở trình duyệt tại [http://localhost:3000](http://localhost:3000) để trải nghiệm:
 - **Trang chủ & Đăng nhập**: Xác thực qua TideCloak với cơ chế PRISM (không lưu mật khẩu dạng hash).
 - **Protected Routes**: Kiểm tra session và vai trò người dùng (`/protected`).
-- **Route hỗ trợ DPoP (chưa bật)**: `/tide_dpop/.../tide_dpop_auth.html` cung cấp HTML cho SDK nếu bật DPoP sau này. Demo hiện tại chưa truyền `useDPoP` cho provider; nút Verify Token gọi `/api/protected` bằng Bearer token. API này chưa xác minh DPoP proof. DPoP không phải yêu cầu bắt buộc của challenge.
+- **DPoP cho API demo**: Provider yêu cầu `useDPoP: { mode: 'strict' }`; nút Verify Token dùng `secureFetch` để gửi token cùng proof tới `/api/protected`. API kiểm tra chữ ký proof, `htm`, `htu`, `iat`, `jti`, `ath` và liên kết khóa `cnf.jkt`. Route `/tide_dpop/.../tide_dpop_auth.html` cung cấp HTML cần cho SDK. Bộ nhớ chống replay hiện nằm trong tiến trình Next.js; triển khai nhiều instance cần kho lưu trữ dùng chung. Proxy của trang `/protected` chỉ xác minh access token, chưa kiểm tra DPoP proof cho điều hướng trang. DPoP không phải yêu cầu bắt buộc của challenge.
 
 ---
 
@@ -156,7 +156,7 @@ Dự án có cấu hình MCP từ xa cho Tide Raziel. Khả năng sử dụng ph
 | Mục tiêu | Câu hỏi / Prompt mẫu cho AI | Hành động của AI via MCP |
 | :--- | :--- | :--- |
 | **Quét rủi ro hệ thống (Blast Radius)** | *"Quét dự án của tôi và phân tích Blast Radius để xem nếu rò rỉ token/khóa thì điều gì sẽ bị lộ?"* | Gọi `tide_blast_radius` & `tide_security_analysis` để rà soát toàn bộ route, session và database. |
-| **Tìm hiểu DPoP** | *"Hướng dẫn bổ sung DPoP proof verification cho API Next.js"* | Hỗ trợ thiết kế bước xác minh còn thiếu; repo hiện chỉ xác minh Bearer token. |
+| **Kiểm tra DPoP** | *"Rà soát luồng DPoP của `/api/protected` và thử các proof sai URL, phương thức hoặc dùng lại"* | Kiểm tra tính hợp lệ của proof và giới hạn của bộ nhớ chống replay. |
 | **Phân quyền vai trò (RBAC / IGA)** | *"Thiết lập role-based access cho nhóm 'admin' và 'user' qua TideCloak IGA"* | Cung cấp các bước gán role và phê duyệt change request thông qua IGA API. |
 | **Mã hóa E2EE (Hermetic E2EE)** | *"Hướng dẫn cách mã hóa dữ liệu end-to-end giữa 2 người dùng bằng Forseti Relationship Attestation"* | Gọi canon `relationship-attestation` và sinh mã hóa E2EE sử dụng khóa phân tán ORK. |
 | **Khắc phục sự cố Auth** | *"Gặp lỗi redirect loop sau khi đăng nhập qua TideCloak, hãy chuẩn đoán nguyên nhân"* | Gọi `tide_doctor` và kiểm tra redirect-handler canon để tìm sai sót cấu hình URL. |

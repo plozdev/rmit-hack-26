@@ -27,7 +27,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en">
       <body>
         {isConfigured ? (
-          <TideCloakProvider config={tcConfig}>{children}</TideCloakProvider>
+          <TideCloakProvider config={{ ...tcConfig, useDPoP: { mode: 'strict' } }}>{children}</TideCloakProvider>
         ) : (
           <main style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
             <h1>TideCloak is not configured</h1>
